@@ -202,42 +202,92 @@ socket.on("show-story", ({ stories }) => {
   resultScreen.style.display = "block";
   storyList.innerHTML = "";
 
-  let allLines = [];
-  stories.forEach(s => {
-    allLines.push(`🎤 ${s.playerName} oyuncusunun hikayesi:`);
-    allLines.push(...s.storyLines);
-  });
+  // Master için kontrol butonları
+  if (isMaster) {
+    const btnWrapper = document.createElement("div");
+    btnWrapper.id = "storyBtnWrapper";
+    btnWrapper.style.display = "flex";
+    btnWrapper.style.gap = "10px";
+    btnWrapper.style.marginBottom = "16px";
 
-  let currentLine = 0;
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "btn btn-primary";
+    nextBtn.textContent = "➡️ Sonraki";
+    nextBtn.style.flex = "1";
+    nextBtn.onclick = () => socket.emit("story-next", currentRoom);
 
-  const nextBtn = document.createElement("button");
-  nextBtn.className = "btn btn-primary";
-  nextBtn.textContent = "➡️ Sonraki";
-  nextBtn.style.marginTop = "16px";
-  storyList.appendChild(nextBtn);
+    const allBtn = document.createElement("button");
+    allBtn.className = "btn btn-success";
+    allBtn.textContent = "📖 Tümünü Göster";
+    allBtn.style.flex = "1";
+    allBtn.onclick = () => socket.emit("story-all", currentRoom);
 
-  function showNext() {
-    if (currentLine < allLines.length) {
-      const li = document.createElement("li");
-      li.textContent = allLines[currentLine];
-      storyList.insertBefore(li, nextBtn);
-      currentLine++;
-    } else {
-      nextBtn.style.display = "none";
-
-      if (isMaster) {
-        const restartBtn = document.createElement("button");
-        restartBtn.className = "btn btn-warning";
-        restartBtn.textContent = "🔄 Tekrar Oyna";
-        restartBtn.style.marginTop = "12px";
-        restartBtn.onclick = () => socket.emit("restart-game", currentRoom);
-        storyList.appendChild(restartBtn);
-      }
-    }
+    btnWrapper.appendChild(nextBtn);
+    btnWrapper.appendChild(allBtn);
+    storyList.appendChild(btnWrapper);
+  } else {
+    const waitText = document.createElement("p");
+    waitText.id = "waitStoryText";
+    waitText.textContent = "⏳ Oyun kurucu hikayeyi açıyor...";
+    waitText.style.textAlign = "center";
+    waitText.style.color = "#888";
+    waitText.style.fontStyle = "italic";
+    storyList.appendChild(waitText);
   }
+});
 
-  nextBtn.addEventListener("click", showNext);
-  showNext();
+// Sunucudan tek satır geldi
+socket.on("story-line", ({ line, index, total }) => {
+  const waitText = document.getElementById("waitStoryText");
+  if (waitText) waitText.remove();
+
+  const btnWrapper = document.getElementById("storyBtnWrapper");
+  const li = document.createElement("li");
+  li.textContent = line;
+  if (btnWrapper) {
+    storyList.insertBefore(li, btnWrapper);
+  } else {
+    storyList.appendChild(li);
+  }
+});
+
+// Tüm satırlar geldi
+socket.on("story-all-lines", ({ lines }) => {
+  const waitText = document.getElementById("waitStoryText");
+  if (waitText) waitText.remove();
+
+  const btnWrapper = document.getElementById("storyBtnWrapper");
+
+  lines.forEach(line => {
+    const li = document.createElement("li");
+    li.textContent = line;
+    if (btnWrapper) {
+      storyList.insertBefore(li, btnWrapper);
+    } else {
+      storyList.appendChild(li);
+    }
+  });
+});
+
+// Hikaye bitti
+socket.on("story-done", () => {
+  const btnWrapper = document.getElementById("storyBtnWrapper");
+  if (btnWrapper) btnWrapper.remove();
+
+  if (isMaster) {
+    const restartBtn = document.createElement("button");
+    restartBtn.className = "btn btn-warning";
+    restartBtn.textContent = "🔄 Tekrar Oyna";
+    restartBtn.style.marginTop = "12px";
+    restartBtn.onclick = () => socket.emit("restart-game", currentRoom);
+    storyList.appendChild(restartBtn);
+  } else {
+    const doneText = document.createElement("p");
+    doneText.textContent = "🎉 Hikaye bitti!";
+    doneText.style.textAlign = "center";
+    doneText.style.fontWeight = "bold";
+    storyList.appendChild(doneText);
+  }
 });
 
 // =====================

@@ -120,7 +120,42 @@ io.on("connection", (socket) => {
   socket.on("master-start-story", (roomName) => {
     const room = rooms[roomName];
     if (!room || socket.id !== room.masterId) return;
+    room.currentStoryLine = 0;
     io.to(roomName).emit("show-story", { stories: room.storyMatrix });
+  });
+
+  // Sonraki satırı herkese gönder
+  socket.on("story-next", (roomName) => {
+    const room = rooms[roomName];
+    if (!room || socket.id !== room.masterId) return;
+    const allLines = [];
+    room.storyMatrix.forEach(s => {
+      allLines.push(`🎤 ${s.playerName} oyuncusunun hikayesi:`);
+      s.storyLines.forEach(l => allLines.push(l));
+    });
+    if (room.currentStoryLine < allLines.length) {
+      io.to(roomName).emit("story-line", {
+        line: allLines[room.currentStoryLine],
+        index: room.currentStoryLine,
+        total: allLines.length
+      });
+      room.currentStoryLine++;
+    } else {
+      io.to(roomName).emit("story-done");
+    }
+  });
+
+  // Tüm hikayeyi herkese gönder
+  socket.on("story-all", (roomName) => {
+    const room = rooms[roomName];
+    if (!room || socket.id !== room.masterId) return;
+    const allLines = [];
+    room.storyMatrix.forEach(s => {
+      allLines.push(`🎤 ${s.playerName} oyuncusunun hikayesi:`);
+      s.storyLines.forEach(l => allLines.push(l));
+    });
+    room.currentStoryLine = allLines.length;
+    io.to(roomName).emit("story-all-lines", { lines: allLines });
   });
 
   socket.on("restart-game", (roomName) => {
