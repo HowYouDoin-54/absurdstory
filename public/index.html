@@ -8,6 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>🎭 AbsurdStory</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
 </head>
 <body>
   <div class="container">
@@ -111,6 +113,11 @@
   <audio id="beepSound" src="/beep.mp3" preload="auto"></audio>
   <script src="/socket.io/socket.io.js"></script>
   <script src="client.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  </script>
   <script>
     // Ekran geçiş butonları
     document.getElementById('switchToJoinBtn').addEventListener('click', () => {
