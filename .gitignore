@@ -1,3 +1,11 @@
 node_modules/
 .env
 .DS_Store
+android.keystore
+app/build/
+.gradle/
+app-release-signed.apk
+app-release-bundle.aab
+app-release-unsigned-aligned.apk
+app-release-signed.apk.idsig
+build/

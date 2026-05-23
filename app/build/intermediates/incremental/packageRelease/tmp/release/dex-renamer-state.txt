@@ -1,4 +1,0 @@
-#Sat May 23 23:30:30 TRT 2026
-base.0=C\:\\projects\\absurdstory\\app\\build\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
-renamed.0=classes.dex
-path.0=classes.dex
