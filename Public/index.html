@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#7F77DD" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>🎭 AbsurdStory</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+
+    <header class="app-header">
+      <div class="logo">🎭</div>
+      <h1>AbsurdStory</h1>
+      <p class="tagline">Absürd hikayeler yarat!</p>
+    </header>
+
+    <!-- Oda oluşturma -->
+    <div id="create-room-screen" class="screen card">
+      <h2>Oda Oluştur</h2>
+      <div class="input-group">
+        <label for="createNameInput">İsmin</label>
+        <input id="createNameInput" type="text" placeholder="Adını yaz" autocomplete="off" />
+      </div>
+      <div class="input-group">
+        <label for="createRoomInput">Oda Adı</label>
+        <input id="createRoomInput" type="text" placeholder="Oda adı" autocomplete="off" />
+      </div>
+      <div class="input-group">
+        <label for="createRoomCodeInput">Oda Kodu</label>
+        <input id="createRoomCodeInput" type="text" placeholder="Şifre / kod" autocomplete="off" />
+      </div>
+      <button id="createRoomBtn" class="btn btn-primary">🚀 Oda Oluştur</button>
+      <div class="divider"><span>ya da</span></div>
+      <p class="switch-hint">Zaten bir oda var mı? <button class="link-btn" id="switchToJoinBtn">Odaya Katıl</button></p>
+    </div>
+
+    <!-- Odaya katılma -->
+    <div id="join-room-screen" class="screen card" style="display:none;">
+      <h2>Odaya Katıl</h2>
+      <div class="input-group">
+        <label for="joinNameInput">İsmin</label>
+        <input id="joinNameInput" type="text" placeholder="Adını yaz" autocomplete="off" />
+      </div>
+      <div class="input-group">
+        <label for="joinRoomInput">Oda Adı</label>
+        <input id="joinRoomInput" type="text" placeholder="Oda adı" autocomplete="off" />
+      </div>
+      <div class="input-group">
+        <label for="joinRoomCodeInput">Oda Kodu</label>
+        <input id="joinRoomCodeInput" type="text" placeholder="Şifre / kod" autocomplete="off" />
+      </div>
+      <button id="joinRoomBtn" class="btn btn-primary">🎮 Odaya Katıl</button>
+      <div class="divider"><span>ya da</span></div>
+      <p class="switch-hint">Yeni oda oluşturmak mı? <button class="link-btn" id="switchToCreateBtn">Oda Oluştur</button></p>
+    </div>
+
+    <!-- Lobby -->
+    <div id="lobby-screen" class="screen card" style="display:none;">
+      <h2>👥 Oyuncular</h2>
+      <ul id="playerList" class="player-list"></ul>
+
+      <div id="timeSelectorDiv" style="display:none;" class="time-selector">
+        <label for="timeSelector">⏳ Soru Süresi</label>
+        <div class="select-wrapper">
+          <select id="timeSelector">
+            <option value="10">10 saniye</option>
+            <option value="15">15 saniye</option>
+            <option value="20" selected>20 saniye</option>
+            <option value="25">25 saniye</option>
+            <option value="30">30 saniye</option>
+            <option value="45">45 saniye</option>
+            <option value="60">60 saniye</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="waitingText" class="waiting-text">Oyun kurucunun başlatmasını bekle...</div>
+      <button id="startGameBtn" class="btn btn-success" style="display:none;">🚀 Oyunu Başlat</button>
+    </div>
+
+    <!-- Oyun ekranı -->
+    <div id="game-screen" class="screen card" style="display:none;">
+      <div class="question-header">
+        <span class="question-label">Soru</span>
+        <h2 id="question-title"></h2>
+      </div>
+
+      <div id="timerWrapper" class="timer-wrapper">
+        <div id="timerBar" class="timer-bar"></div>
+      </div>
+      <div id="progressText" class="progress-text">⏰ 20 saniye kaldı</div>
+
+      <div class="answer-area">
+        <input id="answerInput" type="text" placeholder="Cevabını buraya yaz..." autocomplete="off" />
+        <button id="submitBtn" class="btn btn-primary">✅ Gönder</button>
+      </div>
+    </div>
+
+    <!-- Sonuç ekranı -->
+    <div id="result-screen" class="screen card" style="display:none;">
+      <h2>🎉 Absürd Hikaye</h2>
+      <ul id="storyList" class="story-list"></ul>
+    </div>
+
+  </div>
+
+  <audio id="beepSound" src="/beep.mp3" preload="auto"></audio>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+  <script>
+    // Ekran geçiş butonları
+    document.getElementById('switchToJoinBtn').addEventListener('click', () => {
+      document.getElementById('create-room-screen').style.display = 'none';
+      document.getElementById('join-room-screen').style.display = 'block';
+    });
+    document.getElementById('switchToCreateBtn').addEventListener('click', () => {
+      document.getElementById('join-room-screen').style.display = 'none';
+      document.getElementById('create-room-screen').style.display = 'block';
+    });
+  </script>
+</body>
+</html>

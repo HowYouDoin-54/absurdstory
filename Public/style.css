@@ -1,0 +1,405 @@
+/* =====================
+   Reset & Base
+   ===================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: linear-gradient(-45deg, #ffecd2, #fcb69f, #f6d365, #fda085);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  color: #222;
+}
+
+@keyframes gradientBG {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* =====================
+   Layout
+   ===================== */
+.container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+}
+
+/* =====================
+   Header
+   ===================== */
+.app-header {
+  text-align: center;
+  padding: 24px 0 8px;
+}
+
+.app-header .logo {
+  font-size: 52px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.app-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: #333;
+  letter-spacing: -0.5px;
+}
+
+.app-header .tagline {
+  font-size: 14px;
+  color: #666;
+  margin: 4px 0 0;
+}
+
+/* =====================
+   Cards (screens)
+   ===================== */
+.card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px 20px;
+  margin-top: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+}
+
+.card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 20px;
+  color: #222;
+  text-align: center;
+}
+
+/* =====================
+   Input groups
+   ===================== */
+.input-group {
+  margin-bottom: 14px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  width: 100%;
+  font-size: 16px; /* min 16px prevents iOS zoom */
+  padding: 13px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 12px;
+  outline: none;
+  background: #fafafa;
+  color: #222;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="text"]:focus,
+select:focus {
+  border-color: #7F77DD;
+  box-shadow: 0 0 0 3px rgba(127,119,221,0.18);
+  background: #fff;
+}
+
+input[type="text"]::placeholder {
+  color: #aaa;
+}
+
+/* =====================
+   Buttons
+   ===================== */
+.btn {
+  display: block;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: filter 0.15s, transform 0.1s;
+  margin-top: 8px;
+  -webkit-appearance: none;
+}
+
+.btn:active {
+  transform: scale(0.97);
+  filter: brightness(0.95);
+}
+
+.btn-primary {
+  background: #7F77DD;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.btn-success {
+  background: #28a745;
+  color: #fff;
+}
+
+.btn-success:hover {
+  filter: brightness(1.08);
+}
+
+.btn-warning {
+  background: #fd7e14;
+  color: #fff;
+}
+
+/* Link buton */
+.link-btn {
+  background: none;
+  border: none;
+  color: #7F77DD;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+/* =====================
+   Divider
+   ===================== */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 10px;
+  color: #bbb;
+  font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #eee;
+}
+
+.switch-hint {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+/* =====================
+   Player list
+   ===================== */
+.player-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px;
+  border: 1.5px solid #eee;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fafafa;
+  max-height: 220px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.player-list li {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.player-list li:last-child {
+  border-bottom: none;
+}
+
+.player-list li::before {
+  content: '👤';
+  font-size: 16px;
+}
+
+/* =====================
+   Time selector
+   ===================== */
+.time-selector {
+  margin-bottom: 16px;
+}
+
+.time-selector label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-wrapper::after {
+  content: '▾';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #888;
+}
+
+/* =====================
+   Waiting text
+   ===================== */
+.waiting-text {
+  text-align: center;
+  font-size: 14px;
+  color: #888;
+  font-style: italic;
+  margin: 8px 0;
+}
+
+/* =====================
+   Game screen
+   ===================== */
+.question-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.question-label {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #7F77DD;
+  background: rgba(127,119,221,0.1);
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+#question-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #222;
+  margin: 0;
+}
+
+/* Timer */
+.timer-wrapper {
+  width: 100%;
+  height: 10px;
+  background: #eee;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.timer-bar {
+  height: 100%;
+  width: 100%;
+  background: #4caf50;
+  border-radius: 99px;
+  transition: width 0.9s linear, background-color 0.5s;
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 18px;
+}
+
+/* Answer area */
+.answer-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.answer-area input {
+  font-size: 16px;
+  padding: 14px;
+}
+
+/* =====================
+   Story list (results)
+   ===================== */
+.story-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.story-list li {
+  background: #f0edff;
+  border-left: 4px solid #7F77DD;
+  margin: 8px 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #333;
+  animation: fadeInUp 0.4s ease;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =====================
+   Tablet & Desktop
+   ===================== */
+@media (min-width: 600px) {
+  .container {
+    padding: 24px 0 60px;
+  }
+
+  .app-header {
+    padding-top: 40px;
+  }
+
+  .card {
+    padding: 32px 32px;
+  }
+}
+
+/* =====================
+   Safe area (notch/home bar)
+   ===================== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
