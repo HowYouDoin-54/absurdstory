@@ -30,6 +30,73 @@ const waitingText = document.getElementById("waitingText");
 const questions = ["Kim?", "Kiminle?", "Nerede?", "Ne zaman?", "Ne oldu?"];
 const beep = new Audio("/beep.mp3");
 
+// =====================
+// Web Audio Ses Efektleri
+// =====================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+// Kısa ding - cevap gönderilince
+function playDing() {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1100, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+  } catch(e) {}
+}
+
+// Oyun başlayınca - heyecanlı ses
+function playGameStart() {
+  try {
+    const ctx = getAudioCtx();
+    const notes = [523, 659, 784, 1047];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+      gain.gain.setValueAtTime(0.25, ctx.currentTime + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.2);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.2);
+    });
+  } catch(e) {}
+}
+
+// Hikaye açılınca - dramatik fanfare
+function playFanfare() {
+  try {
+    const ctx = getAudioCtx();
+    const notes = [392, 523, 659, 784, 1047];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime + i * 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.35);
+      osc.start(ctx.currentTime + i * 0.1);
+      osc.stop(ctx.currentTime + i * 0.1 + 0.35);
+    });
+  } catch(e) {}
+}
+
 createBtn.disabled = true;
 joinBtn.disabled = true;
 
@@ -113,6 +180,7 @@ socket.on("ask-question", ({ questionIndex, questionTime }) => {
   submitBtn.style.display = "block";
   submitBtn.textContent = "✅ Gönder";
   progressText.textContent = "0/0 oyuncu cevapladı";
+  if (questionIndex === 0) playGameStart();
   startTimer(questionTime || 30);
   setTimeout(() => answerInput.focus(), 100);
 });
@@ -136,6 +204,7 @@ function sendAnswer(answer) {
   answerInput.disabled = true;
   submitBtn.disabled = true;
   submitBtn.textContent = "✔ Gönderildi";
+  playDing();
   clearInterval(timerInterval);
   timerBar.style.width = "0%";
 }
@@ -172,10 +241,11 @@ socket.on("waiting-master", () => {
 // show-story: masterId ile master kim belli
 socket.on("show-story", ({ stories, masterId }) => {
   const amIMaster = socket.id === masterId;
-  isMaster = amIMaster; // global'i de güncelle
+  isMaster = amIMaster;
   gameScreen.style.display = "none";
   resultScreen.style.display = "block";
   storyList.innerHTML = "";
+  playFanfare();
 
   if (amIMaster) {
     const btnWrapper = document.createElement("div");
