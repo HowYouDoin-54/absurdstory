@@ -190,7 +190,8 @@ socket.on("show-story", ({ stories, masterId }) => {
 
     const allBtn = document.createElement("button");
     allBtn.className = "btn btn-success";
-    allBtn.textContent = "📖 Tümünü Göster";
+    allBtn.id = "storyAllBtn";
+    allBtn.textContent = "👤 Sonraki Oyuncu";
     allBtn.style.flex = "1";
     allBtn.onclick = () => socket.emit("story-all", currentRoom);
 
@@ -219,11 +220,11 @@ socket.on("story-line", ({ line }) => {
   }
 });
 
-socket.on("story-all-lines", ({ lines }) => {
+socket.on("story-player", ({ lines, isLast }) => {
   const waitText = document.getElementById("waitStoryText");
   if (waitText) waitText.remove();
   const btnWrapper = document.getElementById("storyBtnWrapper");
-  storyList.querySelectorAll("li").forEach(item => item.remove());
+
   lines.forEach(line => {
     const li = document.createElement("li");
     li.textContent = line;
@@ -233,6 +234,12 @@ socket.on("story-all-lines", ({ lines }) => {
       storyList.appendChild(li);
     }
   });
+
+  // Son oyuncuysa butonu gizle
+  if (isLast) {
+    const allBtn = document.getElementById("storyAllBtn");
+    if (allBtn) allBtn.style.display = "none";
+  }
 });
 
 socket.on("story-done", () => {
