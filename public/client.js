@@ -257,6 +257,25 @@ socket.on("story-all-lines", ({ lines }) => {
   if (waitText) waitText.remove();
 
   const btnWrapper = document.getElementById("storyBtnWrapper");
+  
+  // Önce mevcut satırları temizle
+  const existingItems = storyList.querySelectorAll("li");
+  existingItems.forEach(item => item.remove());
+
+  lines.forEach(line => {
+    const li = document.createElement("li");
+    li.textContent = line;
+    if (btnWrapper) {
+      storyList.insertBefore(li, btnWrapper);
+    } else {
+      storyList.appendChild(li);
+    }
+  });
+});
+  const waitText = document.getElementById("waitStoryText");
+  if (waitText) waitText.remove();
+
+  const btnWrapper = document.getElementById("storyBtnWrapper");
 
   lines.forEach(line => {
     const li = document.createElement("li");
