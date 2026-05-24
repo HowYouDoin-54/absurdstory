@@ -30,7 +30,6 @@ const waitingText = document.getElementById("waitingText");
 const questions = ["Kim?", "Kiminle?", "Nerede?", "Ne zaman?", "Ne oldu?"];
 const beep = new Audio("/beep.mp3");
 
-// Bağlantı kurulana kadar butonları devre dışı bırak
 createBtn.disabled = true;
 joinBtn.disabled = true;
 
@@ -45,9 +44,6 @@ socket.on("disconnect", () => {
   showToast("Bağlantı kesildi, yeniden bağlanıyor...");
 });
 
-// =====================
-// Oda oluştur
-// =====================
 createBtn.addEventListener("click", () => {
   const name = document.getElementById("createNameInput").value.trim();
   const room = document.getElementById("createRoomInput").value.trim();
@@ -58,9 +54,6 @@ createBtn.addEventListener("click", () => {
   socket.emit("create-room", { playerName: name, roomName: room, roomCode: code });
 });
 
-// =====================
-// Odaya katıl
-// =====================
 joinBtn.addEventListener("click", () => {
   const name = document.getElementById("joinNameInput").value.trim();
   const room = document.getElementById("joinRoomInput").value.trim();
@@ -71,9 +64,6 @@ joinBtn.addEventListener("click", () => {
   socket.emit("join-room", { playerName: name, roomName: room, roomCode: code });
 });
 
-// =====================
-// Odaya katıldı
-// =====================
 socket.on("room-joined", ({ roomName, isMaster: isM, players }) => {
   currentRoom = roomName;
   isMaster = isM;
@@ -95,7 +85,6 @@ socket.on("you-are-now-master", () => {
 });
 
 socket.on("room-error", (msg) => showToast(msg));
-
 socket.on("update-player-list", (players) => updatePlayerList(players));
 
 function updatePlayerList(players) {
@@ -107,16 +96,10 @@ function updatePlayerList(players) {
   });
 }
 
-// =====================
-// Oyunu başlat
-// =====================
 startGameBtn.addEventListener("click", () => {
   socket.emit("start-game", currentRoom, parseInt(timeSelector.value));
 });
 
-// =====================
-// Soru soruldu
-// =====================
 socket.on("ask-question", ({ questionIndex, questionTime }) => {
   currentQuestionIndex = questionIndex;
   gameScreen.style.display = "block";
@@ -134,9 +117,6 @@ socket.on("ask-question", ({ questionIndex, questionTime }) => {
   setTimeout(() => answerInput.focus(), 100);
 });
 
-// =====================
-// Cevap gönder
-// =====================
 submitBtn.addEventListener("click", () => sendAnswer(answerInput.value.trim()));
 
 answerInput.addEventListener("keydown", (e) => {
@@ -160,9 +140,6 @@ function sendAnswer(answer) {
   timerBar.style.width = "0%";
 }
 
-// =====================
-// Tüm oyuncular cevapladı
-// =====================
 socket.on("waiting-master", () => {
   clearInterval(timerInterval);
   gameScreen.style.display = "block";
@@ -192,15 +169,15 @@ socket.on("waiting-master", () => {
   }
 });
 
-// =====================
-// Hikayeyi göster
-// =====================
-socket.on("show-story", ({ stories }) => {
+// show-story: masterId ile master kim belli
+socket.on("show-story", ({ stories, masterId }) => {
+  const amIMaster = socket.id === masterId;
+  isMaster = amIMaster; // global'i de güncelle
   gameScreen.style.display = "none";
   resultScreen.style.display = "block";
   storyList.innerHTML = "";
 
-  if (isMaster) {
+  if (amIMaster) {
     const btnWrapper = document.createElement("div");
     btnWrapper.id = "storyBtnWrapper";
     btnWrapper.style.cssText = "display:flex; gap:10px; margin-bottom:16px;";
@@ -229,13 +206,9 @@ socket.on("show-story", ({ stories }) => {
   }
 });
 
-// =====================
-// Sunucudan tek satır geldi
-// =====================
 socket.on("story-line", ({ line }) => {
   const waitText = document.getElementById("waitStoryText");
   if (waitText) waitText.remove();
-
   const btnWrapper = document.getElementById("storyBtnWrapper");
   const li = document.createElement("li");
   li.textContent = line;
@@ -246,16 +219,11 @@ socket.on("story-line", ({ line }) => {
   }
 });
 
-// =====================
-// Tüm satırlar geldi
-// =====================
 socket.on("story-all-lines", ({ lines }) => {
   const waitText = document.getElementById("waitStoryText");
   if (waitText) waitText.remove();
-
   const btnWrapper = document.getElementById("storyBtnWrapper");
   storyList.querySelectorAll("li").forEach(item => item.remove());
-
   lines.forEach(line => {
     const li = document.createElement("li");
     li.textContent = line;
@@ -267,13 +235,9 @@ socket.on("story-all-lines", ({ lines }) => {
   });
 });
 
-// =====================
-// Hikaye bitti
-// =====================
 socket.on("story-done", () => {
   const btnWrapper = document.getElementById("storyBtnWrapper");
   if (btnWrapper) btnWrapper.remove();
-
   if (isMaster) {
     const restartBtn = document.createElement("button");
     restartBtn.className = "btn btn-warning";
@@ -289,9 +253,6 @@ socket.on("story-done", () => {
   }
 });
 
-// =====================
-// Oyun tekrar başlatıldı
-// =====================
 socket.on("game-restarted", () => {
   resultScreen.style.display = "none";
   lobbyScreen.style.display = "block";
@@ -302,23 +263,16 @@ socket.on("game-restarted", () => {
   progressText.textContent = "";
 });
 
-// =====================
-// İlerleme güncelleme
-// =====================
 socket.on("update-progress", ({ answered, total }) => {
   progressText.textContent = `${answered}/${total} oyuncu cevapladı`;
 });
 
-// =====================
-// Timer
-// =====================
 function startTimer(seconds) {
   clearInterval(timerInterval);
   timeLeft = seconds;
   timerBar.style.width = "100%";
   timerBar.style.backgroundColor = "#4caf50";
   updateTimerDisplay(seconds, seconds);
-
   timerInterval = setInterval(() => {
     timeLeft--;
     updateTimerDisplay(timeLeft, seconds);
@@ -341,9 +295,6 @@ function updateTimerDisplay(timeLeft, total) {
   progressText.textContent = `⏰ ${timeLeft} saniye kaldı`;
 }
 
-// =====================
-// Toast bildirimi
-// =====================
 function showToast(msg) {
   let toast = document.getElementById("toast");
   if (!toast) {

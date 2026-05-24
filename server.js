@@ -121,7 +121,7 @@ io.on("connection", (socket) => {
     const room = rooms[roomName];
     if (!room || socket.id !== room.masterId) return;
     room.currentStoryLine = 0;
-    io.to(roomName).emit("show-story", { stories: room.storyMatrix });
+io.to(roomName).emit("show-story", { stories: room.storyMatrix, masterId: room.masterId });
   });
 
   // Sonraki satırı herkese gönder
