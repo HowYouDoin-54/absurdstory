@@ -28,9 +28,22 @@ const progressText = document.getElementById("progressText");
 const waitingText = document.getElementById("waitingText");
 
 const questions = ["Kim?", "Kiminle?", "Nerede?", "Ne zaman?", "Ne oldu?"];
-
-// Ses efekti
 const beep = new Audio("/beep.mp3");
+
+// Bağlantı kurulana kadar butonları devre dışı bırak
+createBtn.disabled = true;
+joinBtn.disabled = true;
+
+socket.on("connect", () => {
+  createBtn.disabled = false;
+  joinBtn.disabled = false;
+});
+
+socket.on("disconnect", () => {
+  createBtn.disabled = true;
+  joinBtn.disabled = true;
+  showToast("Bağlantı kesildi, yeniden bağlanıyor...");
+});
 
 // =====================
 // Oda oluştur
@@ -73,9 +86,6 @@ socket.on("room-joined", ({ roomName, isMaster: isM, players }) => {
   updatePlayerList(players);
 });
 
-// =====================
-// Yeni master atanırsa
-// =====================
 socket.on("you-are-now-master", () => {
   isMaster = true;
   startGameBtn.style.display = "block";
@@ -84,14 +94,8 @@ socket.on("you-are-now-master", () => {
   showToast("👑 Artık sen oda sahibisin!");
 });
 
-// =====================
-// Hata mesajı
-// =====================
 socket.on("room-error", (msg) => showToast(msg));
 
-// =====================
-// Oyuncu listesi güncelle
-// =====================
 socket.on("update-player-list", (players) => updatePlayerList(players));
 
 function updatePlayerList(players) {
@@ -104,7 +108,7 @@ function updatePlayerList(players) {
 }
 
 // =====================
-// Oyunu başlat (master)
+// Oyunu başlat
 // =====================
 startGameBtn.addEventListener("click", () => {
   socket.emit("start-game", currentRoom, parseInt(timeSelector.value));
@@ -119,19 +123,14 @@ socket.on("ask-question", ({ questionIndex, questionTime }) => {
   lobbyScreen.style.display = "none";
   resultScreen.style.display = "none";
   questionTitle.textContent = questions[questionIndex];
-
   answerInput.value = "";
   answerInput.disabled = false;
   answerInput.style.display = "block";
   submitBtn.disabled = false;
   submitBtn.style.display = "block";
   submitBtn.textContent = "✅ Gönder";
-
-  progressText.textContent = `0/0 oyuncu cevapladı`;
-
+  progressText.textContent = "0/0 oyuncu cevapladı";
   startTimer(questionTime || 30);
-
-  // Mobilde klavyeyi aç
   setTimeout(() => answerInput.focus(), 100);
 });
 
@@ -140,7 +139,6 @@ socket.on("ask-question", ({ questionIndex, questionTime }) => {
 // =====================
 submitBtn.addEventListener("click", () => sendAnswer(answerInput.value.trim()));
 
-// Enter tuşuyla gönder
 answerInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -202,13 +200,10 @@ socket.on("show-story", ({ stories }) => {
   resultScreen.style.display = "block";
   storyList.innerHTML = "";
 
-  // Master için kontrol butonları
   if (isMaster) {
     const btnWrapper = document.createElement("div");
     btnWrapper.id = "storyBtnWrapper";
-    btnWrapper.style.display = "flex";
-    btnWrapper.style.gap = "10px";
-    btnWrapper.style.marginBottom = "16px";
+    btnWrapper.style.cssText = "display:flex; gap:10px; margin-bottom:16px;";
 
     const nextBtn = document.createElement("button");
     nextBtn.className = "btn btn-primary";
@@ -229,15 +224,15 @@ socket.on("show-story", ({ stories }) => {
     const waitText = document.createElement("p");
     waitText.id = "waitStoryText";
     waitText.textContent = "⏳ Oyun kurucu hikayeyi açıyor...";
-    waitText.style.textAlign = "center";
-    waitText.style.color = "#888";
-    waitText.style.fontStyle = "italic";
+    waitText.style.cssText = "text-align:center; color:#888; font-style:italic;";
     storyList.appendChild(waitText);
   }
 });
 
+// =====================
 // Sunucudan tek satır geldi
-socket.on("story-line", ({ line, index, total }) => {
+// =====================
+socket.on("story-line", ({ line }) => {
   const waitText = document.getElementById("waitStoryText");
   if (waitText) waitText.remove();
 
@@ -251,31 +246,15 @@ socket.on("story-line", ({ line, index, total }) => {
   }
 });
 
+// =====================
 // Tüm satırlar geldi
+// =====================
 socket.on("story-all-lines", ({ lines }) => {
   const waitText = document.getElementById("waitStoryText");
   if (waitText) waitText.remove();
 
   const btnWrapper = document.getElementById("storyBtnWrapper");
-  
-  // Önce mevcut satırları temizle
-  const existingItems = storyList.querySelectorAll("li");
-  existingItems.forEach(item => item.remove());
-
-  lines.forEach(line => {
-    const li = document.createElement("li");
-    li.textContent = line;
-    if (btnWrapper) {
-      storyList.insertBefore(li, btnWrapper);
-    } else {
-      storyList.appendChild(li);
-    }
-  });
-});
-  const waitText = document.getElementById("waitStoryText");
-  if (waitText) waitText.remove();
-
-  const btnWrapper = document.getElementById("storyBtnWrapper");
+  storyList.querySelectorAll("li").forEach(item => item.remove());
 
   lines.forEach(line => {
     const li = document.createElement("li");
@@ -288,7 +267,9 @@ socket.on("story-all-lines", ({ lines }) => {
   });
 });
 
+// =====================
 // Hikaye bitti
+// =====================
 socket.on("story-done", () => {
   const btnWrapper = document.getElementById("storyBtnWrapper");
   if (btnWrapper) btnWrapper.remove();
@@ -303,8 +284,7 @@ socket.on("story-done", () => {
   } else {
     const doneText = document.createElement("p");
     doneText.textContent = "🎉 Hikaye bitti!";
-    doneText.style.textAlign = "center";
-    doneText.style.fontWeight = "bold";
+    doneText.style.cssText = "text-align:center; font-weight:bold;";
     storyList.appendChild(doneText);
   }
 });
@@ -330,29 +310,24 @@ socket.on("update-progress", ({ answered, total }) => {
 });
 
 // =====================
-// Timer fonksiyonu
+// Timer
 // =====================
 function startTimer(seconds) {
   clearInterval(timerInterval);
   timeLeft = seconds;
   timerBar.style.width = "100%";
   timerBar.style.backgroundColor = "#4caf50";
-
   updateTimerDisplay(seconds, seconds);
 
   timerInterval = setInterval(() => {
     timeLeft--;
     updateTimerDisplay(timeLeft, seconds);
-
     if (timeLeft <= 5 && timeLeft > 0) {
       try { beep.currentTime = 0; beep.play(); } catch(e) {}
     }
-
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
-      if (!answerInput.disabled) {
-        sendAnswer(answerInput.value.trim());
-      }
+      if (!answerInput.disabled) sendAnswer(answerInput.value.trim());
     }
   }, 1000);
 }
@@ -360,16 +335,9 @@ function startTimer(seconds) {
 function updateTimerDisplay(timeLeft, total) {
   const percent = (timeLeft / total) * 100;
   timerBar.style.width = percent + "%";
-
-  // Renk: yeşil → sarı → kırmızı
-  if (percent > 50) {
-    timerBar.style.backgroundColor = "#4caf50";
-  } else if (percent > 25) {
-    timerBar.style.backgroundColor = "#ff9800";
-  } else {
-    timerBar.style.backgroundColor = "#f44336";
-  }
-
+  if (percent > 50) timerBar.style.backgroundColor = "#4caf50";
+  else if (percent > 25) timerBar.style.backgroundColor = "#ff9800";
+  else timerBar.style.backgroundColor = "#f44336";
   progressText.textContent = `⏰ ${timeLeft} saniye kaldı`;
 }
 
@@ -382,18 +350,12 @@ function showToast(msg) {
     toast = document.createElement("div");
     toast.id = "toast";
     toast.style.cssText = `
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
+      position: fixed; bottom: 30px; left: 50%;
       transform: translateX(-50%);
-      background: rgba(0,0,0,0.82);
-      color: #fff;
-      padding: 12px 22px;
-      border-radius: 99px;
-      font-size: 14px;
-      z-index: 9999;
-      transition: opacity 0.3s;
-      white-space: nowrap;
+      background: rgba(0,0,0,0.82); color: #fff;
+      padding: 12px 22px; border-radius: 99px;
+      font-size: 14px; z-index: 9999;
+      transition: opacity 0.3s; white-space: nowrap;
     `;
     document.body.appendChild(toast);
   }
