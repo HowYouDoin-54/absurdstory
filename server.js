@@ -158,9 +158,6 @@ io.on("connection", (socket) => {
       if (playerId) io.to(playerId).emit("read-now", { isLast });
       io.to(roomName).emit("reader-announced", { playerName, isLast });
       room.currentPlayerIndex++;
-      if (isLast) {
-        setTimeout(() => io.to(roomName).emit("story-done"), 500);
-      }
     } else {
       io.to(roomName).emit("story-done");
     }
@@ -168,13 +165,14 @@ io.on("connection", (socket) => {
 
   socket.on("restart-game", (roomName) => {
     const room = rooms[roomName];
-    if (!room || socket.id !== room.masterId) return;
+    if (!room) return;
 
     room.currentQuestion = 0;
     room.playerStories = {};
     room.answersReceived = 0;
     room.storyMatrix = [];
     room.storyIndex = 0;
+    room.currentPlayerIndex = 0;
 
     io.to(roomName).emit("game-restarted");
   });

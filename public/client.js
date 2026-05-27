@@ -318,6 +318,16 @@ socket.on("read-now", ({ isLast }) => {
     });
     
     storyList.appendChild(area);
+
+    // Son oyuncuysa master ekranına tekrar oyna butonu ekle
+    if (isLast) {
+      const restartBtn = document.createElement("button");
+      restartBtn.className = "btn btn-warning";
+      restartBtn.textContent = "🔄 Tekrar Oyna";
+      restartBtn.style.marginTop = "12px";
+      restartBtn.onclick = () => socket.emit("restart-game", currentRoom);
+      storyList.appendChild(restartBtn);
+    }
     return;
   }
   
