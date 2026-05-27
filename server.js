@@ -120,43 +120,32 @@ io.on("connection", (socket) => {
   socket.on("master-start-story", (roomName) => {
     const room = rooms[roomName];
     if (!room || socket.id !== room.masterId) return;
-    room.currentStoryLine = 0;
     room.currentPlayerIndex = 0;
-    io.to(roomName).emit("show-story", { stories: room.storyMatrix, masterId: room.masterId });
-  });
 
-  // Sonraki satırı herkese gönder
-  socket.on("story-next", (roomName) => {
-    const room = rooms[roomName];
-    if (!room || socket.id !== room.masterId) return;
-    const allLines = [];
-    room.storyMatrix.forEach(s => {
-      allLines.push(`🎤 ${s.playerName} oyuncusunun hikayesi:`);
-      s.storyLines.forEach(l => allLines.push(l));
+    // Her oyuncuya kendi hikayesini gizlice gönder
+    room.storyMatrix.forEach((s, i) => {
+      const playerId = room.players[i].id;
+      io.to(playerId).emit("your-story", { lines: s.storyLines });
     });
-    if (room.currentStoryLine < allLines.length) {
-      io.to(roomName).emit("story-line", {
-        line: allLines[room.currentStoryLine],
-        index: room.currentStoryLine,
-        total: allLines.length
-      });
-      room.currentStoryLine++;
-    } else {
-      io.to(roomName).emit("story-done");
-    }
+
+    // Master ekranına kontrol paneli gönder
+    io.to(roomName).emit("show-story", { masterId: room.masterId, totalPlayers: room.players.length });
   });
 
-  // Sonraki oyuncunun tüm hikayesini göster
-  socket.on("story-all", (roomName) => {
+  // Master sıradaki oyuncuyu okutmaya başlatır
+  socket.on("next-reader", (roomName) => {
     const room = rooms[roomName];
     if (!room || socket.id !== room.masterId) return;
-    if (!room.currentPlayerIndex) room.currentPlayerIndex = 0;
 
     if (room.currentPlayerIndex < room.storyMatrix.length) {
       const s = room.storyMatrix[room.currentPlayerIndex];
-      const lines = [`🎤 ${s.playerName} oyuncusunun hikayesi:`, ...s.storyLines];
+      const playerId = room.players[room.currentPlayerIndex].id;
       const isLast = room.currentPlayerIndex === room.storyMatrix.length - 1;
-      io.to(roomName).emit("story-player", { lines, isLast });
+
+      // O oyuncuya "şimdi oku" sinyali gönder
+      io.to(playerId).emit("read-now", { isLast });
+      // Herkese kimin okuduğunu bildir
+      io.to(roomName).emit("reader-announced", { playerName: s.playerName, isLast });
       room.currentPlayerIndex++;
     } else {
       io.to(roomName).emit("story-done");

@@ -6,8 +6,8 @@ let playerName = "";
 let currentQuestionIndex = 0;
 let timerInterval = null;
 let timeLeft = 0;
+let myStoryLines = [];
 
-// DOM Elements
 const createBtn = document.getElementById("createRoomBtn");
 const joinBtn = document.getElementById("joinRoomBtn");
 const createRoomScreen = document.getElementById("create-room-screen");
@@ -41,33 +41,27 @@ function getAudioCtx() {
   return audioCtx;
 }
 
-// Kısa ding - cevap gönderilince
 function playDing() {
   try {
     const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(ctx.destination);
     osc.frequency.setValueAtTime(880, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(1100, ctx.currentTime + 0.1);
     gain.gain.setValueAtTime(0.3, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.4);
   } catch(e) {}
 }
 
-// Oyun başlayınca - heyecanlı ses
 function playGameStart() {
   try {
     const ctx = getAudioCtx();
-    const notes = [523, 659, 784, 1047];
-    notes.forEach((freq, i) => {
+    [523, 659, 784, 1047].forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+      osc.connect(gain); gain.connect(ctx.destination);
       osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
       gain.gain.setValueAtTime(0.25, ctx.currentTime + i * 0.12);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.2);
@@ -77,17 +71,14 @@ function playGameStart() {
   } catch(e) {}
 }
 
-// Hikaye açılınca - dramatik fanfare
 function playFanfare() {
   try {
     const ctx = getAudioCtx();
-    const notes = [392, 523, 659, 784, 1047];
-    notes.forEach((freq, i) => {
+    [392, 523, 659, 784, 1047].forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'triangle';
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+      osc.connect(gain); gain.connect(ctx.destination);
       osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1);
       gain.gain.setValueAtTime(0.2, ctx.currentTime + i * 0.1);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.35);
@@ -97,6 +88,9 @@ function playFanfare() {
   } catch(e) {}
 }
 
+// =====================
+// Bağlantı
+// =====================
 createBtn.disabled = true;
 joinBtn.disabled = true;
 
@@ -111,6 +105,9 @@ socket.on("disconnect", () => {
   showToast("Bağlantı kesildi, yeniden bağlanıyor...");
 });
 
+// =====================
+// Oda oluştur
+// =====================
 createBtn.addEventListener("click", () => {
   const name = document.getElementById("createNameInput").value.trim();
   const room = document.getElementById("createRoomInput").value.trim();
@@ -121,6 +118,9 @@ createBtn.addEventListener("click", () => {
   socket.emit("create-room", { playerName: name, roomName: room, roomCode: code });
 });
 
+// =====================
+// Odaya katıl
+// =====================
 joinBtn.addEventListener("click", () => {
   const name = document.getElementById("joinNameInput").value.trim();
   const room = document.getElementById("joinRoomInput").value.trim();
@@ -167,6 +167,9 @@ startGameBtn.addEventListener("click", () => {
   socket.emit("start-game", currentRoom, parseInt(timeSelector.value));
 });
 
+// =====================
+// Soru soruldu
+// =====================
 socket.on("ask-question", ({ questionIndex, questionTime }) => {
   currentQuestionIndex = questionIndex;
   gameScreen.style.display = "block";
@@ -188,19 +191,12 @@ socket.on("ask-question", ({ questionIndex, questionTime }) => {
 submitBtn.addEventListener("click", () => sendAnswer(answerInput.value.trim()));
 
 answerInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    sendAnswer(answerInput.value.trim());
-  }
+  if (e.key === "Enter") { e.preventDefault(); sendAnswer(answerInput.value.trim()); }
 });
 
 function sendAnswer(answer) {
   if (!answer) answer = "...";
-  socket.emit("submit-answer", {
-    roomName: currentRoom,
-    questionIndex: currentQuestionIndex,
-    answer
-  });
+  socket.emit("submit-answer", { roomName: currentRoom, questionIndex: currentQuestionIndex, answer });
   answerInput.disabled = true;
   submitBtn.disabled = true;
   submitBtn.textContent = "✔ Gönderildi";
@@ -209,6 +205,9 @@ function sendAnswer(answer) {
   timerBar.style.width = "0%";
 }
 
+// =====================
+// Tüm oyuncular cevapladı
+// =====================
 socket.on("waiting-master", () => {
   clearInterval(timerInterval);
   gameScreen.style.display = "block";
@@ -238,8 +237,17 @@ socket.on("waiting-master", () => {
   }
 });
 
-// show-story: masterId ile master kim belli
-socket.on("show-story", ({ stories, masterId }) => {
+// =====================
+// Kendi hikayesi gizlice geldi
+// =====================
+socket.on("your-story", ({ lines }) => {
+  myStoryLines = lines;
+});
+
+// =====================
+// Hikaye ekranı açıldı
+// =====================
+socket.on("show-story", ({ masterId, totalPlayers }) => {
   const amIMaster = socket.id === masterId;
   isMaster = amIMaster;
   gameScreen.style.display = "none";
@@ -248,74 +256,82 @@ socket.on("show-story", ({ stories, masterId }) => {
   playFanfare();
 
   if (amIMaster) {
-    const btnWrapper = document.createElement("div");
-    btnWrapper.id = "storyBtnWrapper";
-    btnWrapper.style.cssText = "display:flex; gap:10px; margin-bottom:16px;";
+    const info = document.createElement("p");
+    info.id = "readerInfo";
+    info.textContent = "Hazır! Sırayla okutmaya başla 👇";
+    info.style.cssText = "text-align:center; font-weight:bold; margin-bottom:12px;";
+    storyList.appendChild(info);
 
-    const nextBtn = document.createElement("button");
-    nextBtn.className = "btn btn-primary";
-    nextBtn.textContent = "➡️ Sonraki";
-    nextBtn.style.flex = "1";
-    nextBtn.onclick = () => socket.emit("story-next", currentRoom);
-
-    const allBtn = document.createElement("button");
-    allBtn.className = "btn btn-success";
-    allBtn.id = "storyAllBtn";
-    allBtn.textContent = "👤 Sonraki Oyuncu";
-    allBtn.style.flex = "1";
-    allBtn.onclick = () => socket.emit("story-all", currentRoom);
-
-    btnWrapper.appendChild(nextBtn);
-    btnWrapper.appendChild(allBtn);
-    storyList.appendChild(btnWrapper);
+    const nextReaderBtn = document.createElement("button");
+    nextReaderBtn.id = "nextReaderBtn";
+    nextReaderBtn.className = "btn btn-primary";
+    nextReaderBtn.textContent = "▶️ Sıradaki Okusun";
+    nextReaderBtn.onclick = () => socket.emit("next-reader", currentRoom);
+    storyList.appendChild(nextReaderBtn);
   } else {
     const waitText = document.createElement("p");
     waitText.id = "waitStoryText";
-    waitText.textContent = "⏳ Oyun kurucu hikayeyi açıyor...";
-    waitText.style.cssText = "text-align:center; color:#888; font-style:italic;";
+    waitText.textContent = "⏳ Sıranı bekle...";
+    waitText.style.cssText = "text-align:center; color:#888; font-style:italic; font-size:18px;";
     storyList.appendChild(waitText);
   }
 });
 
-socket.on("story-line", ({ line }) => {
+// =====================
+// Kimin okuyacağı herkese bildirildi
+// =====================
+socket.on("reader-announced", ({ playerName, isLast }) => {
+  const info = document.getElementById("readerInfo");
+  if (info) info.textContent = `🎤 ${playerName} okuyor...`;
+
   const waitText = document.getElementById("waitStoryText");
-  if (waitText) waitText.remove();
-  const btnWrapper = document.getElementById("storyBtnWrapper");
-  const li = document.createElement("li");
-  li.textContent = line;
-  if (btnWrapper) {
-    storyList.insertBefore(li, btnWrapper);
-  } else {
-    storyList.appendChild(li);
+  if (waitText) waitText.textContent = `🎤 ${playerName} okuyor...`;
+
+  if (isLast) {
+    const nextReaderBtn = document.getElementById("nextReaderBtn");
+    if (nextReaderBtn) nextReaderBtn.style.display = "none";
   }
 });
 
-socket.on("story-player", ({ lines, isLast }) => {
-  const waitText = document.getElementById("waitStoryText");
-  if (waitText) waitText.remove();
-  const btnWrapper = document.getElementById("storyBtnWrapper");
+// =====================
+// O oyuncuya "şimdi oku" sinyali geldi
+// =====================
+socket.on("read-now", ({ isLast }) => {
+  storyList.innerHTML = "";
 
-  lines.forEach(line => {
+  const title = document.createElement("p");
+  title.textContent = "📖 Senin Hikayenin:";
+  title.style.cssText = "font-weight:bold; font-size:18px; text-align:center; margin-bottom:12px;";
+  storyList.appendChild(title);
+
+  myStoryLines.forEach(line => {
     const li = document.createElement("li");
     li.textContent = line;
-    if (btnWrapper) {
-      storyList.insertBefore(li, btnWrapper);
-    } else {
-      storyList.appendChild(li);
-    }
+    storyList.appendChild(li);
   });
 
-  // Son oyuncuysa butonu gizle
-  if (isLast) {
-    const allBtn = document.getElementById("storyAllBtn");
-    if (allBtn) allBtn.style.display = "none";
+  if (!isLast) {
+    const doneReadingBtn = document.createElement("button");
+    doneReadingBtn.className = "btn btn-success";
+    doneReadingBtn.textContent = "✅ Okudum";
+    doneReadingBtn.style.marginTop = "12px";
+    doneReadingBtn.onclick = () => {
+      doneReadingBtn.disabled = true;
+      doneReadingBtn.textContent = "⏳ Sıradaki bekleniyor...";
+    };
+    storyList.appendChild(doneReadingBtn);
   }
 });
 
+// =====================
+// Hikaye bitti
+// =====================
 socket.on("story-done", () => {
-  const btnWrapper = document.getElementById("storyBtnWrapper");
-  if (btnWrapper) btnWrapper.remove();
   if (isMaster) {
+    const nextReaderBtn = document.getElementById("nextReaderBtn");
+    if (nextReaderBtn) nextReaderBtn.remove();
+    const info = document.getElementById("readerInfo");
+    if (info) info.textContent = "🎉 Tüm hikayeler okundu!";
     const restartBtn = document.createElement("button");
     restartBtn.className = "btn btn-warning";
     restartBtn.textContent = "🔄 Tekrar Oyna";
@@ -323,14 +339,19 @@ socket.on("story-done", () => {
     restartBtn.onclick = () => socket.emit("restart-game", currentRoom);
     storyList.appendChild(restartBtn);
   } else {
+    storyList.innerHTML = "";
     const doneText = document.createElement("p");
-    doneText.textContent = "🎉 Hikaye bitti!";
-    doneText.style.cssText = "text-align:center; font-weight:bold;";
+    doneText.textContent = "🎉 Tüm hikayeler okundu!";
+    doneText.style.cssText = "text-align:center; font-weight:bold; font-size:18px;";
     storyList.appendChild(doneText);
   }
 });
 
+// =====================
+// Oyun tekrar başlatıldı
+// =====================
 socket.on("game-restarted", () => {
+  myStoryLines = [];
   resultScreen.style.display = "none";
   lobbyScreen.style.display = "block";
   storyList.innerHTML = "";
@@ -344,6 +365,9 @@ socket.on("update-progress", ({ answered, total }) => {
   progressText.textContent = `${answered}/${total} oyuncu cevapladı`;
 });
 
+// =====================
+// Timer
+// =====================
 function startTimer(seconds) {
   clearInterval(timerInterval);
   timeLeft = seconds;
@@ -372,6 +396,9 @@ function updateTimerDisplay(timeLeft, total) {
   progressText.textContent = `⏰ ${timeLeft} saniye kaldı`;
 }
 
+// =====================
+// Toast
+// =====================
 function showToast(msg) {
   let toast = document.getElementById("toast");
   if (!toast) {
