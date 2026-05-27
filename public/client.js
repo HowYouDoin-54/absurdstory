@@ -290,6 +290,19 @@ socket.on("reader-announced", ({ playerName, isLast }) => {
   if (isLast) {
     const nextReaderBtn = document.getElementById("nextReaderBtn");
     if (nextReaderBtn) nextReaderBtn.style.display = "none";
+    // 2 saniye sonra story-done göster
+    setTimeout(() => {
+      if (isMaster) {
+        const info2 = document.getElementById("readerInfo");
+        if (info2) info2.textContent = "🎉 Tüm hikayeler okundu!";
+        const restartBtn = document.createElement("button");
+        restartBtn.className = "btn btn-warning";
+        restartBtn.textContent = "🔄 Tekrar Oyna";
+        restartBtn.style.marginTop = "12px";
+        restartBtn.onclick = () => socket.emit("restart-game", currentRoom);
+        storyList.appendChild(restartBtn);
+      }
+    }, 2000);
   }
 });
 
@@ -298,7 +311,6 @@ socket.on("reader-announced", ({ playerName, isLast }) => {
 // =====================
 socket.on("read-now", ({ isLast }) => {
   if (isMaster) {
-    // Master için hikayeyi butonun altında göster, butonu koruma
     const existing = document.getElementById("masterStoryArea");
     if (existing) existing.remove();
     
@@ -318,16 +330,6 @@ socket.on("read-now", ({ isLast }) => {
     });
     
     storyList.appendChild(area);
-
-    // Son oyuncuysa master ekranına tekrar oyna butonu ekle
-    if (isLast) {
-      const restartBtn = document.createElement("button");
-      restartBtn.className = "btn btn-warning";
-      restartBtn.textContent = "🔄 Tekrar Oyna";
-      restartBtn.style.marginTop = "12px";
-      restartBtn.onclick = () => socket.emit("restart-game", currentRoom);
-      storyList.appendChild(restartBtn);
-    }
     return;
   }
   
@@ -345,18 +347,6 @@ socket.on("read-now", ({ isLast }) => {
     li.textContent = line;
     storyList.appendChild(li);
   });
-
-  if (!isLast) {
-    const doneReadingBtn = document.createElement("button");
-    doneReadingBtn.className = "btn btn-success";
-    doneReadingBtn.textContent = "✅ Okudum";
-    doneReadingBtn.style.marginTop = "12px";
-    doneReadingBtn.onclick = () => {
-      doneReadingBtn.disabled = true;
-      doneReadingBtn.textContent = "⏳ Sıradaki bekleniyor...";
-    };
-    storyList.appendChild(doneReadingBtn);
-  }
 });
 
 // =====================
