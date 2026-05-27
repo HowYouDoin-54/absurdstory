@@ -158,6 +158,9 @@ io.on("connection", (socket) => {
       if (playerId) io.to(playerId).emit("read-now", { isLast });
       io.to(roomName).emit("reader-announced", { playerName, isLast });
       room.currentPlayerIndex++;
+      if (isLast) {
+        setTimeout(() => io.to(roomName).emit("story-done"), 500);
+      }
     } else {
       io.to(roomName).emit("story-done");
     }
