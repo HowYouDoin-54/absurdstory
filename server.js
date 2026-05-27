@@ -146,15 +146,15 @@ io.on("connection", (socket) => {
   socket.on("next-reader", (roomName) => {
     const room = rooms[roomName];
     if (!room) return;
+    console.log("next-reader:", roomName, "players:", room.players.map(p=>p.name), "matrix:", room.storyMatrix.map(s=>s.playerName), "index:", room.currentPlayerIndex);
 
     if (room.currentPlayerIndex < room.storyMatrix.length) {
       const s = room.storyMatrix[room.currentPlayerIndex];
       const playerName = s.playerName;
-      // İsme göre güncel socket id'yi bul
       const playerObj = room.players.find(p => p.name === playerName);
       const playerId = playerObj ? playerObj.id : null;
       const isLast = room.currentPlayerIndex === room.storyMatrix.length - 1;
-
+      console.log("playerId:", playerId, "playerName:", playerName);
       if (playerId) io.to(playerId).emit("read-now", { isLast });
       io.to(roomName).emit("reader-announced", { playerName, isLast });
       room.currentPlayerIndex++;
