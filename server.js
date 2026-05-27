@@ -149,10 +149,14 @@ io.on("connection", (socket) => {
 
     if (room.currentPlayerIndex < room.storyMatrix.length) {
       const s = room.storyMatrix[room.currentPlayerIndex];
-      const playerId = room.players[room.currentPlayerIndex].id;
+      const playerName = s.playerName;
+      // İsme göre güncel socket id'yi bul
+      const playerObj = room.players.find(p => p.name === playerName);
+      const playerId = playerObj ? playerObj.id : null;
       const isLast = room.currentPlayerIndex === room.storyMatrix.length - 1;
-      io.to(playerId).emit("read-now", { isLast });
-      io.to(roomName).emit("reader-announced", { playerName: s.playerName, isLast });
+
+      if (playerId) io.to(playerId).emit("read-now", { isLast });
+      io.to(roomName).emit("reader-announced", { playerName, isLast });
       room.currentPlayerIndex++;
     } else {
       io.to(roomName).emit("story-done");
