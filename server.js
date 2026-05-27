@@ -146,11 +146,6 @@ io.on("connection", (socket) => {
   socket.on("next-reader", (roomName) => {
     const room = rooms[roomName];
     if (!room) return;
-    // masterId güncel socket.id ile güncelle (reconnect durumu için)
-    const player = room.players.find(p => p.id === socket.id);
-    if (!player) return;
-    // Sadece master başlatabilir
-    if (socket.id !== room.masterId) return;
 
     if (room.currentPlayerIndex < room.storyMatrix.length) {
       const s = room.storyMatrix[room.currentPlayerIndex];
