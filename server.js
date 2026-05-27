@@ -43,11 +43,21 @@ io.on("connection", (socket) => {
     if (!room) return socket.emit("room-error", "Oda bulunamadı.");
     if (room.code !== roomCode) return socket.emit("room-error", "Oda kodu yanlış.");
 
-    room.players.push({ id: socket.id, name: playerName });
+    // Aynı isimde oyuncu varsa masterId güncelle (reconnect)
+    const existing = room.players.find(p => p.name === playerName);
+    if (existing) {
+      const wasMaster = existing.id === room.masterId;
+      existing.id = socket.id;
+      if (wasMaster) room.masterId = socket.id;
+    } else {
+      room.players.push({ id: socket.id, name: playerName });
+    }
+
     socket.join(roomName);
+    const isM = room.masterId === socket.id;
     socket.emit("room-joined", {
       roomName,
-      isMaster: false,
+      isMaster: isM,
       players: room.players.map(p => p.name)
     });
     io.to(roomName).emit("update-player-list", room.players.map(p => p.name));
@@ -135,16 +145,18 @@ io.on("connection", (socket) => {
   // Master sıradaki oyuncuyu okutmaya başlatır
   socket.on("next-reader", (roomName) => {
     const room = rooms[roomName];
-    if (!room || socket.id !== room.masterId) return;
+    if (!room) return;
+    // masterId güncel socket.id ile güncelle (reconnect durumu için)
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player) return;
+    // Sadece master başlatabilir
+    if (socket.id !== room.masterId) return;
 
     if (room.currentPlayerIndex < room.storyMatrix.length) {
       const s = room.storyMatrix[room.currentPlayerIndex];
       const playerId = room.players[room.currentPlayerIndex].id;
       const isLast = room.currentPlayerIndex === room.storyMatrix.length - 1;
-
-      // O oyuncuya "şimdi oku" sinyali gönder
       io.to(playerId).emit("read-now", { isLast });
-      // Herkese kimin okuduğunu bildir
       io.to(roomName).emit("reader-announced", { playerName: s.playerName, isLast });
       room.currentPlayerIndex++;
     } else {
