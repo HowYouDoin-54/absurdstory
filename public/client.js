@@ -297,7 +297,30 @@ socket.on("reader-announced", ({ playerName, isLast }) => {
 // O oyuncuya "şimdi oku" sinyali geldi
 // =====================
 socket.on("read-now", ({ isLast }) => {
-  if (isMaster) return; // Master kendi ekranını değiştirmesin
+  if (isMaster) {
+    // Master için hikayeyi butonun altında göster, butonu koruma
+    const existing = document.getElementById("masterStoryArea");
+    if (existing) existing.remove();
+    
+    const area = document.createElement("div");
+    area.id = "masterStoryArea";
+    area.style.marginTop = "16px";
+    
+    const title = document.createElement("p");
+    title.textContent = "📖 Senin Hikayenin:";
+    title.style.cssText = "font-weight:bold; font-size:16px; text-align:center;";
+    area.appendChild(title);
+    
+    myStoryLines.forEach(line => {
+      const li = document.createElement("li");
+      li.textContent = line;
+      area.appendChild(li);
+    });
+    
+    storyList.appendChild(area);
+    return;
+  }
+  
   storyList.innerHTML = "";
   resultScreen.scrollTop = 0;
   window.scrollTo(0, 0);
