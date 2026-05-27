@@ -297,7 +297,10 @@ socket.on("reader-announced", ({ playerName, isLast }) => {
 // O oyuncuya "şimdi oku" sinyali geldi
 // =====================
 socket.on("read-now", ({ isLast }) => {
+  if (isMaster) return; // Master kendi ekranını değiştirmesin
   storyList.innerHTML = "";
+  resultScreen.scrollTop = 0;
+  window.scrollTo(0, 0);
 
   const title = document.createElement("p");
   title.textContent = "📖 Senin Hikayenin:";
